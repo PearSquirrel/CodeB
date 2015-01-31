@@ -1,7 +1,7 @@
 import socket
 import sys
 import time
-
+import operator
 
 class Bot:
     def __init__(self):
@@ -11,6 +11,7 @@ class Bot:
         self.run('MY_CASH')
         self.database = {}
         self.numSeconds = 0
+        self.sorted_earnings_factors = {}
 
         while True:
             self.updateModel()
@@ -35,6 +36,7 @@ class Bot:
         if self.numSeconds >= 6:
             self.updateTrend()
         self.updateSecurities()
+        self.getVolatility()
 
     def updateTrend(self):
         for ticker in self.database:
@@ -149,6 +151,35 @@ class Bot:
         finally:
             sock.close()
 
+            
+    # ====================================
+    # ====================================
+    # Adopting Keivaun's Code
+    # ====================================
+    # ====================================
+
+    def getBestStocks(self):
+        bestStocks = []
+        for i in range(0, len(self.sorted_earnings_factors)):
+            if self.sorted_earnings_factors[i][1] > 1:
+                bestStocks.append(self.sorted_earnings_factors[i][0])
+        return bestStocks
+                
+
+    def getVolatility(self):
+        numSeconds = self.numSeconds + 1
+        if numSeconds == 1:
+            for ticker in self.database:
+                self.database[ticker]['earnings_factor_average'] = 1
+        else:
+            for ticker in self.database:
+                earningsFactor = float(self.database[ticker]['net_worth'][-1]) / float(self.database[ticker]['net_worth'][-2])
+                self.database[ticker]['earnings_factor_average'] = (self.database[ticker]['earnings_factor_average'] * (numSeconds - 1)  + earningsFactor) / numSeconds
+                
+            sorted_earnings_factors = {}
+            for ticker in self.database:
+                sorted_earnings_factors[ticker] = self.database[ticker]['earnings_factor_average']
+            self.sorted_earnings_factors = sorted(sorted_earnings_factors.items(), key=operator.itemgetter(1), reverse=True)
 
     # ====================================
     # ====================================
