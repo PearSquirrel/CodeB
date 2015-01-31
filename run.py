@@ -8,7 +8,6 @@ class Bot:
         self.user = 'dabes'
         self.password = 'scoober'
         self.HOST, self.PORT = "codebb.cloudapp.net", 17429
-        self.run('MY_CASH')
         self.database = {}
         self.numSeconds = 0
         self.sorted_earnings_factors = {}
@@ -90,6 +89,13 @@ class Bot:
 
         print self.database
 
+     def getHighestTrending(self):
+        tickers = self.database.keys()
+        trends = [self.database[ticker]['trend'][-1] for ticker in self.database.keys()]
+        sorteditems = sorted(zip(trends, tickers), reverse=True)
+        sortedTickers = [ticker for trend, ticker in sorteditems]
+        return sortedTickers[0]
+
     def ask(self, *commands):
         to_return = ""
 
@@ -109,31 +115,7 @@ class Bot:
             sock.close()
             return to_return
 
-    def getHighestTrending(self):
-        tickers = self.database.keys()
-        trends = [self.database[ticker]['trend'][-1] for ticker in self.database.keys()]
-        sorteditems = sorted(zip(trends, tickers), reverse=True)
-        sortedTickers = [ticker for trend, ticker in sorteditems]
-        return sortedTickers[0]
-
-    def run(self, *commands):
-
-        data = self.user + " " + self.password + "\n" + "\n".join(commands) + "\nCLOSE_CONNECTION\n"
-
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-            sock.connect((self.HOST, self.PORT))
-            sock.sendall(data)
-            sfile = sock.makefile()
-            rline = sfile.readline()
-            while rline:
-                print(rline.strip())
-                rline = sfile.readline()
-        finally:
-            sock.close()
-
-    def subscribe(self):
+  def subscribe(self):
         self.HOST, self.PORT = "codebb.cloudapp.net", 17429
 
         data = self.user + " " + self.password + "\nSUBSCRIBE\n"
@@ -150,13 +132,6 @@ class Bot:
                 rline = sfile.readline()
         finally:
             sock.close()
-
-            
-    # ====================================
-    # ====================================
-    # Adopting Keivaun's Code
-    # ====================================
-    # ====================================
 
     def getBestStocks(self):
         bestStocks = []
